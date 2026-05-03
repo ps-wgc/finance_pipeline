@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Finance Research Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background: #fff;
+      color: #000;
+    }
+    h1 { font-size: 22px; margin-bottom: 4px; }
+    p.sub { color: #555; margin-top: 0; font-size: 14px; }
+    input[type="text"] {
+      width: 70%;
+      padding: 6px;
+      font-size: 15px;
+      border: 1px solid #999;
+    }
+    button {
+      padding: 6px 16px;
+      font-size: 15px;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+    #status { margin-top: 12px; font-size: 14px; color: #555; }
+    #result { margin-top: 20px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px 10px;
+      text-align: left;
+    }
+    th { background: #f0f0f0; }
+    .section-title {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 15px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border: 1px solid #999;
+      font-size: 13px;
+    }
+    .positive { border-color: green; color: green; }
+    .negative { border-color: red; color: red; }
+    .neutral  { border-color: gray; color: gray; }
+    .buy   { border-color: green; color: green; }
+    .hold  { border-color: orange; color: orange; }
+    .avoid { border-color: red; color: red; }
+    pre {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 10px;
+      font-size: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    #error { color: red; margin-top: 10px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <h1>Finance Research Tool</h1>
+  <p class="sub">Enter a company name to get sentiment analysis and investment recommendation.</p>
+
+  <div>
+    <input type="text" id="companyInput" placeholder='e.g. Tesla, Google, Reliance Industries' />
+    <button onclick="analyze()">Analyze</button>
+  </div>
+
+  <div id="status"></div>
+  <div id="error"></div>
+  <div id="result"></div>
+
+  <script>
+    async function analyze() {
+      const company = document.getElementById('companyInput').value.trim();
+      if (!company) { alert('Please enter a company name.'); return; }
+
+      document.getElementById('result').innerHTML = '';
+      document.getElementById('error').innerHTML = '';
+      document.getElementById('status').innerText = 'Running pipeline... please wait (may take 20-30 seconds)';
+
+      try {
+        const resp = await fetch('/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ company })
+        });
+
+        const data = await resp.json();
+        document.getElementById('status').innerText = '';
+
+        if (!resp.ok) {
+          document.getElementById('error').innerText = 'Error: ' + (data.error || 'Something went wrong.');
+          return;
+        }
+
+        renderReport(data);
+      } catch (e) {
+        document.getElementById('status').innerText = '';
+        document.getElementById('error').innerText = 'Could not connect to server. Make sure server.py is running.';
+      }
+    }
+
+    function renderReport(d) {
+      const sentClass = d.sentiment === 'Positive' ? 'positive' : d.sentiment === 'Negative' ? 'negative' : 'neutral';
+      const recClass  = d.investment_recommendation === 'Buy' ? 'buy' : d.investment_recommendation === 'Avoid' ? 'avoid' : 'hold';
+
+      document.getElementById('result').innerHTML = `
+        <div class="section-title">Company Overview</div>
+        <table>
+          <tr><th>Company</th><td>${d.company_name}</td><th>Ticker</th><td>${d.stock_code}</td></tr>
+          <tr><th>Current Price</th><td>$${d.current_price}</td><th>52W High</th><td>$${d.fifty_two_week_high}</td></tr>
+          <tr><th>7-day Change</th><td>${d.price_change_7d}</td><th>52W Low</th><td>$${d.fifty_two_week_low}</td></tr>
+          <tr><th>30-day Change</th><td>${d.price_change_30d}</td><th>Generated</th><td>${d.generated_at || '-'}</td></tr>
+        </table>
+
+        <div class="section-title">Sentiment & Recommendation</div>
+        <p>
+          Sentiment: <span class="badge ${sentClass}">${d.sentiment}</span>
+          &nbsp;&nbsp;
+          Confidence: ${(d.confidence_score * 100).toFixed(0)}%
+          &nbsp;&nbsp;
+          Recommendation: <span class="badge ${recClass}">${d.investment_recommendation}</span>
+        </p>
+        <p><b>Rationale:</b> ${d.recommendation_rationale}</p>
+
+        <div class="section-title">News Summary</div>
+        <p>${d.news_summary}</p>
+        <p><b>Market Implications:</b> ${d.market_implications}</p>
+
+        <div class="section-title">Entities Mentioned</div>
+        <table>
+          <tr><th>People</th><td>${(d.people_names || []).join(', ') || '-'}</td></tr>
+          <tr><th>Places</th><td>${(d.places_names || []).join(', ') || '-'}</td></tr>
+          <tr><th>Companies</th><td>${(d.other_companies_referred || []).join(', ') || '-'}</td></tr>
+          <tr><th>Industries</th><td>${(d.related_industries || []).join(', ') || '-'}</td></tr>
+        </table>
+
+        <div class="section-title">Raw JSON Output</div>
+        <pre>${JSON.stringify(d, null, 2)}</pre>
+      `;
+    }
+
+    document.getElementById('companyInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') analyze();
+    });
+  </script>
+
+</body>
+</html>
