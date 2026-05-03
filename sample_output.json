@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-05-03T10:00:00Z",
+  "ticker_source": "static_dict",
+  "company_name": "Google",
+  "stock_code": "GOOGL",
+  "current_price": 178.25,
+  "price_change_7d": "+2.4%",
+  "price_change_30d": "-1.1%",
+  "fifty_two_week_high": 191.75,
+  "fifty_two_week_low": 130.67,
+  "news_summary": "Google announced expanded AI features in Search and Workspace, driven by Gemini integration. The company also reported strong Cloud revenue growth, beating analyst expectations. Regulatory scrutiny in the EU over ad-tech practices continues to be a headwind.",
+  "sentiment": "Positive",
+  "confidence_score": 0.85,
+  "people_names": ["Sundar Pichai", "Ruth Porat", "Thomas Kurian"],
+  "places_names": ["Mountain View", "Brussels", "New York"],
+  "other_companies_referred": ["Microsoft", "OpenAI", "Amazon", "Apple"],
+  "related_industries": ["Cloud Computing", "AI/ML", "Digital Advertising", "Search"],
+  "market_implications": "Strong AI momentum and cloud growth signal continued outperformance relative to peers. EU regulatory risk is a known overhang but unlikely to materially impact near-term earnings.",
+  "investment_recommendation": "Buy",
+  "recommendation_rationale": "Positive sentiment driven by AI product expansion and cloud revenue beat. Price sits 7% below 52-week high, offering a reasonable entry. Regulatory risk is priced in."
+}
